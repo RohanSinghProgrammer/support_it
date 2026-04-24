@@ -1,0 +1,98 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@theme {
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(240 10% 12%);
+  
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(240 10% 12%);
+  
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(240 10% 12%);
+  
+  --color-primary: hsl(240 5% 25%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  
+  --color-secondary: hsl(240 10% 95%);
+  --color-secondary-foreground: hsl(240 5% 25%);
+  
+  --color-muted: hsl(240 5% 85%);
+  --color-muted-foreground: hsl(240 5% 45%);
+  
+  --color-accent: hsl(240 100% 50%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  
+  --color-border: hsl(240 5% 90%);
+  --color-input: hsl(240 5% 95%);
+  --color-ring: hsl(240 100% 50%);
+  
+  --radius-base: 0.5rem;
+}
+
+@dark {
+  --color-background: hsl(240 10% 8%);
+  --color-foreground: hsl(240 5% 95%);
+  
+  --color-card: hsl(240 10% 14%);
+  --color-card-foreground: hsl(240 5% 95%);
+  
+  --color-popover: hsl(240 10% 14%);
+  --color-popover-foreground: hsl(240 5% 95%);
+  
+  --color-primary: hsl(240 100% 95%);
+  --color-primary-foreground: hsl(240 5% 20%);
+  
+  --color-secondary: hsl(240 5% 25%);
+  --color-secondary-foreground: hsl(240 5% 95%);
+  
+  --color-muted: hsl(240 5% 30%);
+  --color-muted-foreground: hsl(240 5% 60%);
+  
+  --color-accent: hsl(240 100% 60%);
+  --color-accent-foreground: hsl(240 10% 8%);
+  
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(240 10% 8%);
+  
+  --color-border: hsl(240 5% 25%);
+  --color-input: hsl(240 5% 20%);
+  --color-ring: hsl(240 100% 60%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply bg-background;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
