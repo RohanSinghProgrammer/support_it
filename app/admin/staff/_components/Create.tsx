@@ -91,7 +91,7 @@ const CreateStaff = ({
                 })
               }
             >
-              <SelectTrigger id="staff-role">
+              <SelectTrigger className='w-full' id="staff-role">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

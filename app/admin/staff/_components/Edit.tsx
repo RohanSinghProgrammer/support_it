@@ -86,7 +86,7 @@ const EditStaff = ({
                 )
               }
             >
-              <SelectTrigger id="edit-staff-role">
+              <SelectTrigger className='w-full' id="edit-staff-role">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

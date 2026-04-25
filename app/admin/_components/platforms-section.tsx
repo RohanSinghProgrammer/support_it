@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react'
+import debounce from 'lodash.debounce'
 import { Trash2, Eye, Search, Pen } from 'lucide-react';
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,6 +50,13 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
     page: parseAsInteger.withDefault(1),
   })
   const activeSearch = type === 'page' ? search : ''
+  const [searchInput, setSearchInput] = useState(activeSearch)
+
+  useEffect(() => {
+    if (type === 'page') {
+      setSearchInput(activeSearch)
+    }
+  }, [activeSearch, type])
 
   const handleEditClick = (platform: Platform) => {
     setPlatformToEdit(platform)
@@ -72,6 +80,25 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
       void setPlatformParams({ page: currentPage })
     }
   }, [currentPage, page, setPlatformParams, type])
+
+  useEffect(() => {
+    if (type !== 'page' || searchInput === activeSearch) {
+      return
+    }
+
+    const syncSearch = debounce((value: string) => {
+      void setPlatformParams({
+        search: value || null,
+        page: 1,
+      })
+    }, 350)
+
+    syncSearch(searchInput)
+
+    return () => {
+      syncSearch.cancel()
+    }
+  }, [activeSearch, searchInput, setPlatformParams, type])
 
   const visiblePlatforms =
     type === 'page'
@@ -105,13 +132,8 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search platforms by name or description..."
-                value={activeSearch}
-                onChange={(e) =>
-                  void setPlatformParams({
-                    search: e.target.value || null,
-                    page: 1,
-                  })
-                }
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full max-md:w-full"
               />
             </div>
@@ -175,10 +197,13 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
       )}
 
       {type === 'page' ? (
-        <div className="flex items-center justify-between gap-4 max-sm:flex-col">
-          <p className="text-sm text-muted-foreground">
-            Showing {visiblePlatforms.length} of {filteredPlatforms.length} platforms
-          </p>
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 max-sm:flex-col max-sm:items-start">
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-foreground">Platform results</p>
+            <p className="text-sm text-muted-foreground">
+              Showing {visiblePlatforms.length} of {filteredPlatforms.length} platforms
+            </p>
+          </div>
           <DataPagination
             currentPage={currentPage}
             totalPages={totalPages}

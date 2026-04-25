@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import debounce from 'lodash.debounce'
 import Link from 'next/link'
 import { Eye, Mail, Pencil, Search, Shield, Trash2, UserRound } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
@@ -25,16 +26,6 @@ import { StaffMember, StaffRole } from '../staff/_components/types'
 
 const STAFF_PAGE_SIZE = 5
 
-const roleBadgeClassName: Record<StaffMember['role'], string> = {
-  admin: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300',
-  staff: 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-300',
-}
-
-const statusBadgeClassName: Record<StaffMember['status'], string> = {
-  active: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300',
-  inactive: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300',
-}
-
 export function StaffSection({ type }: { type: 'page' | 'component' }) {
   const [staff, setStaff] = useState<StaffMember[]>(mockStaff)
   const [newStaff, setNewStaff] = useState<{
@@ -56,6 +47,13 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
     page: parseAsInteger.withDefault(1),
   })
   const activeSearch = type === 'page' ? search : ''
+  const [searchInput, setSearchInput] = useState(activeSearch)
+
+  useEffect(() => {
+    if (type === 'page') {
+      setSearchInput(activeSearch)
+    }
+  }, [activeSearch, type])
 
   const filteredStaff = staff.filter((member) =>
     `${member.name} ${member.email}`.toLowerCase().includes(activeSearch.toLowerCase())
@@ -69,6 +67,25 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
       void setStaffParams({ page: currentPage })
     }
   }, [currentPage, page, setStaffParams, type])
+
+  useEffect(() => {
+    if (type !== 'page' || searchInput === activeSearch) {
+      return
+    }
+
+    const syncSearch = debounce((value: string) => {
+      void setStaffParams({
+        search: value || null,
+        page: 1,
+      })
+    }, 350)
+
+    syncSearch(searchInput)
+
+    return () => {
+      syncSearch.cancel()
+    }
+  }, [activeSearch, searchInput, setStaffParams, type])
 
   const visibleStaff =
     type === 'page'
@@ -151,13 +168,8 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                value={activeSearch}
-                onChange={(event) =>
-                  void setStaffParams({
-                    search: event.target.value || null,
-                    page: 1,
-                  })
-                }
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search staff by name or email..."
                 className="pl-10"
               />
@@ -190,16 +202,28 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="rounded-lg border border-border/60 overflow-hidden">
+          <div className="overflow-hidden rounded-xl border border-border/60 bg-background">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Tickets</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Name
+                  </TableHead>
+                  <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Email
+                  </TableHead>
+                  <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Role
+                  </TableHead>
+                  <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Status
+                  </TableHead>
+                  <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Tickets
+                  </TableHead>
+                  <TableHead className="h-12 px-4 text-right text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -214,37 +238,35 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
                   </TableRow>
                 ) : (
                   visibleStaff.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell className="min-w-[180px]">
+                    <TableRow key={member.id} className="hover:bg-muted/20">
+                      <TableCell className="min-w-[180px] px-4 py-4">
                         <div className="font-medium text-foreground">{member.name}</div>
                       </TableCell>
-                      <TableCell className="min-w-[220px]">
+                      <TableCell className="min-w-[220px] px-4 py-4">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Mail className="w-4 h-4" />
                           <span>{member.email}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-4">
                         <Badge
                           variant="outline"
-                          className={roleBadgeClassName[member.role]}
                         >
                           <Shield className="mr-1 h-3.5 w-3.5" />
                           {member.role === 'admin' ? 'Admin' : 'Staff'}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-4">
                         <Badge
                           variant="outline"
-                          className={statusBadgeClassName[member.status]}
                         >
                           {member.status === 'active' ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="px-4 py-4 font-medium">
                         {member.ticketsAssigned}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-4 py-4">
                         <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
@@ -273,10 +295,13 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
           </div>
 
           {type === 'page' ? (
-            <div className="flex items-center justify-between gap-4 max-sm:flex-col">
-              <p className="text-sm text-muted-foreground">
-                Showing {visibleStaff.length} of {filteredStaff.length} staff members
-              </p>
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 max-sm:flex-col max-sm:items-start">
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium text-foreground">Staff results</p>
+                <p className="text-sm text-muted-foreground">
+                  Showing {visibleStaff.length} of {filteredStaff.length} staff members
+                </p>
+              </div>
               <DataPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
