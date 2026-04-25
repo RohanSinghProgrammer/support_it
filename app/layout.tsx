@@ -64,8 +64,8 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>{children}</NuqsAdapter>
-          {process.env.NODE_ENV === 'production' && <Analytics />}
         </ThemeProvider>
+        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )

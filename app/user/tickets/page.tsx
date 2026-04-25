@@ -183,14 +183,6 @@ export default function UserTickets() {
             ))}
           </div>
         )}
-
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 max-sm:flex-col max-sm:items-start">
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium text-foreground">Ticket results</p>
-            <p className="text-sm text-muted-foreground">
-              Showing {visibleTickets.length} of {filteredTickets.length} tickets
-            </p>
-          </div>
           <DataPagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -198,7 +190,6 @@ export default function UserTickets() {
               void setTicketParams({ page: nextPage })
             }}
           />
-        </div>
       </div>
     </div>
   )

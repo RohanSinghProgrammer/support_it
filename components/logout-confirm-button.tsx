@@ -1,19 +1,19 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 
 interface LogoutConfirmButtonProps {
   className?: string
@@ -29,6 +29,7 @@ export function LogoutConfirmButton({
   variant = 'ghost',
 }: LogoutConfirmButtonProps) {
   const router = useRouter()
+  const [open, setOpen] = useState(false)
 
   const trigger =
     variant === 'button' ? (
@@ -40,29 +41,32 @@ export function LogoutConfirmButton({
         <span>{label}</span>
       </button>
     ) : (
-      <Button variant="ghost" className={className}>
+      <Button variant="ghost" className={cn("hover:bg-red-400!", className)}>
         <LogOut className={iconClassName} />
         <span>{label}</span>
       </Button>
     )
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Logout from SupportIt?</AlertDialogTitle>
-          <AlertDialogDescription>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Logout from SupportIt?</DialogTitle>
+          <DialogDescription>
             You will be signed out from the current session and taken back to the home page.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction className='bg-red-500 hover:bg-red-600 text-white' onClick={() => router.push('/')}>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline">Cancel</Button>
+          <Button
+            className='bg-red-500 hover:bg-red-600 text-white'
+            onClick={() => router.push('/')}
+          >
             Logout
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

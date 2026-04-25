@@ -78,7 +78,7 @@ export function Sidebar({ userRole = 'admin' }: SidebarProps) {
       <div className="border-t border-border p-4 space-y-4 flex gap-2">
         <LogoutConfirmButton
           variant="button"
-          className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-secondary text-foreground transition-colors border border-red-200"
+          className="w-full flex items-center gap-3 px-4 py-1.5 rounded-lg hover:bg-secondary text-foreground transition-colors border border-red-200"
           iconClassName="size-4 text-red-500"
           label="Logout"
         />

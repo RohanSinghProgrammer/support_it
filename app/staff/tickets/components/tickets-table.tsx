@@ -98,10 +98,10 @@ export function TicketsTable() {
     setSelectedTicket((currentTicket) =>
       currentTicket?.id === ticketId
         ? {
-            ...currentTicket,
-            status: newStatus,
-            updatedAt: new Date().toISOString().split('T')[0],
-          }
+          ...currentTicket,
+          status: newStatus,
+          updatedAt: new Date().toISOString().split('T')[0],
+        }
         : currentTicket
     )
   }
@@ -109,22 +109,14 @@ export function TicketsTable() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between gap-4 max-md:flex-col max-md:items-start">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Ticket Inbox</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Review incoming issues, adjust status, and respond without leaving the queue.
-            </p>
-          </div>
-          <div className="relative w-full max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              placeholder="Search tickets by ID, subject, email, or assignee..."
-              className="pl-10"
-            />
-          </div>
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search tickets by ID, subject, email, or assignee..."
+            className="pl-10 w-full"
+          />
         </div>
 
         <Card className="border-border/60 shadow-sm">
@@ -223,22 +215,13 @@ export function TicketsTable() {
                 </TableBody>
               </Table>
             </div>
-
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 max-sm:flex-col max-sm:items-start">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium text-foreground">Ticket results</p>
-                <p className="text-sm text-muted-foreground">
-                  Showing {visibleTickets.length} of {filteredTickets.length} tickets
-                </p>
-              </div>
-              <DataPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={(nextPage) => {
-                  void setTicketParams({ page: nextPage })
-                }}
-              />
-            </div>
+            <DataPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(nextPage) => {
+                void setTicketParams({ page: nextPage })
+              }}
+            />
           </CardContent>
         </Card>
       </div>
