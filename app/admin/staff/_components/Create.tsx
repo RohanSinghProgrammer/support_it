@@ -46,14 +46,14 @@ const CreateStaff = ({
       <DialogTrigger asChild>
         <Button className="gap-2">
           <Plus className="w-4 h-4" />
-          Add Staff Member
+          Add User
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Staff Member</DialogTitle>
+          <DialogTitle>Add User</DialogTitle>
           <DialogDescription>
-            Invite a new team member to the support team
+            Create a new admin, staff, or user account
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -95,13 +95,14 @@ const CreateStaff = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="user">End User</SelectItem>
                 <SelectItem value="staff">Support Staff</SelectItem>
                 <SelectItem value="admin">Administrator</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <Button onClick={onCreate} className="w-full">
-            Add Staff Member
+            Add User
           </Button>
         </div>
       </DialogContent>

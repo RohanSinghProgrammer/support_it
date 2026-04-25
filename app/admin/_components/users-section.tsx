@@ -3,11 +3,27 @@
 import { useEffect, useState } from 'react'
 import debounce from 'lodash.debounce'
 import Link from 'next/link'
-import { Eye, Mail, Pencil, Search, Shield, Trash2, UserRound } from 'lucide-react'
+import {
+  Eye,
+  Mail,
+  Pencil,
+  Search,
+  Shield,
+  Trash2,
+  UserRound,
+  Users,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Table,
   TableBody,
@@ -24,29 +40,31 @@ import EditStaff from '../staff/_components/Edit'
 import { mockStaff } from '../staff/_components/mock-staff'
 import { StaffMember, StaffRole } from '../staff/_components/types'
 
-const STAFF_PAGE_SIZE = 5
+const USERS_PAGE_SIZE = 5
 
-export function StaffSection({ type }: { type: 'page' | 'component' }) {
-  const [staff, setStaff] = useState<StaffMember[]>(mockStaff)
-  const [newStaff, setNewStaff] = useState<{
+export function UsersSection({ type }: { type: 'page' | 'component' }) {
+  const [users, setUsers] = useState<StaffMember[]>(mockStaff)
+  const [newUser, setNewUser] = useState<{
     name: string
     email: string
     role: StaffRole
   }>({
     name: '',
     email: '',
-    role: 'staff' as const,
+    role: 'staff',
   })
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [staffToEdit, setStaffToEdit] = useState<StaffMember | null>(null)
+  const [userToEdit, setUserToEdit] = useState<StaffMember | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null)
-  const [{ search, page }, setStaffParams] = useQueryStates({
+  const [userToDelete, setUserToDelete] = useState<StaffMember | null>(null)
+  const [{ search, page, role }, setUserParams] = useQueryStates({
     search: parseAsString.withDefault(''),
     page: parseAsInteger.withDefault(1),
+    role: parseAsString.withDefault('all'),
   })
   const activeSearch = type === 'page' ? search : ''
+  const activeRole = type === 'page' ? role : 'all'
   const [searchInput, setSearchInput] = useState(activeSearch)
 
   useEffect(() => {
@@ -55,18 +73,23 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
     }
   }, [activeSearch, type])
 
-  const filteredStaff = staff.filter((member) =>
-    `${member.name} ${member.email}`.toLowerCase().includes(activeSearch.toLowerCase())
-  )
+  const filteredUsers = users.filter((member) => {
+    const matchesSearch = `${member.name} ${member.email}`
+      .toLowerCase()
+      .includes(activeSearch.toLowerCase())
+    const matchesRole = activeRole === 'all' || member.role === activeRole
 
-  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / STAFF_PAGE_SIZE))
+    return matchesSearch && matchesRole
+  })
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PAGE_SIZE))
   const currentPage = type === 'page' ? Math.min(Math.max(page, 1), totalPages) : 1
 
   useEffect(() => {
     if (type === 'page' && page !== currentPage) {
-      void setStaffParams({ page: currentPage })
+      void setUserParams({ page: currentPage })
     }
-  }, [currentPage, page, setStaffParams, type])
+  }, [currentPage, page, setUserParams, type])
 
   useEffect(() => {
     if (type !== 'page' || searchInput === activeSearch) {
@@ -74,7 +97,7 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
     }
 
     const syncSearch = debounce((value: string) => {
-      void setStaffParams({
+      void setUserParams({
         search: value || null,
         page: 1,
       })
@@ -85,64 +108,64 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
     return () => {
       syncSearch.cancel()
     }
-  }, [activeSearch, searchInput, setStaffParams, type])
+  }, [activeSearch, searchInput, setUserParams, type])
 
-  const visibleStaff =
+  const visibleUsers =
     type === 'page'
-      ? filteredStaff.slice((currentPage - 1) * STAFF_PAGE_SIZE, currentPage * STAFF_PAGE_SIZE)
-      : filteredStaff.slice(0, 4)
+      ? filteredUsers.slice((currentPage - 1) * USERS_PAGE_SIZE, currentPage * USERS_PAGE_SIZE)
+      : filteredUsers.slice(0, 4)
 
-  const handleCreateStaff = () => {
-    if (!newStaff.name.trim() || !newStaff.email.trim()) {
+  const handleCreateUser = () => {
+    if (!newUser.name.trim() || !newUser.email.trim()) {
       return
     }
 
-    setStaff((currentStaff) => [
-      ...currentStaff,
+    setUsers((currentUsers) => [
+      ...currentUsers,
       {
         id: Date.now().toString(),
-        ...newStaff,
+        ...newUser,
         status: 'active',
         ticketsAssigned: 0,
       },
     ])
-    setNewStaff({ name: '', email: '', role: 'staff' })
+    setNewUser({ name: '', email: '', role: 'staff' })
     setCreateDialogOpen(false)
   }
 
   const handleEditClick = (member: StaffMember) => {
-    setStaffToEdit(member)
+    setUserToEdit(member)
     setEditDialogOpen(true)
   }
 
-  const handleUpdateStaff = () => {
-    if (!staffToEdit) {
+  const handleUpdateUser = () => {
+    if (!userToEdit) {
       return
     }
 
-    setStaff((currentStaff) =>
-      currentStaff.map((member) =>
-        member.id === staffToEdit.id ? staffToEdit : member
+    setUsers((currentUsers) =>
+      currentUsers.map((member) =>
+        member.id === userToEdit.id ? userToEdit : member
       )
     )
     setEditDialogOpen(false)
   }
 
   const handleDeleteClick = (member: StaffMember) => {
-    setStaffToDelete(member)
+    setUserToDelete(member)
     setDeleteDialogOpen(true)
   }
 
-  const handleDeleteStaff = () => {
-    if (!staffToDelete) {
+  const handleDeleteUser = () => {
+    if (!userToDelete) {
       return
     }
 
-    setStaff((currentStaff) =>
-      currentStaff.filter((member) => member.id !== staffToDelete.id)
+    setUsers((currentUsers) =>
+      currentUsers.filter((member) => member.id !== userToDelete.id)
     )
     setDeleteDialogOpen(false)
-    setStaffToDelete(null)
+    setUserToDelete(null)
   }
 
   return (
@@ -151,15 +174,15 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
         {type === 'component' ? (
           <>
             <div>
-              <h2 className="text-2xl font-bold text-foreground">Staff</h2>
+              <h2 className="text-2xl font-bold text-foreground">Users</h2>
               <p className="text-muted-foreground text-sm mt-1 hidden md:block">
-                Manage support team members and workloads
+                Manage admins, staff members, and end users from one place.
               </p>
             </div>
-            <Link href="/admin/staff">
+            <Link href="/admin/users">
               <Button variant="outline" className="gap-2">
                 <Eye className="w-4 h-4" />
-                View All Staff
+                View All Users
               </Button>
             </Link>
           </>
@@ -170,17 +193,33 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
               <Input
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
-                placeholder="Search staff by name or email..."
+                placeholder="Search users by name or email..."
                 className="pl-10"
               />
             </div>
+            <Select
+              value={activeRole}
+              onValueChange={(value) => {
+                void setUserParams({ role: value, page: 1 })
+              }}
+            >
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="staff">Staff</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="flex justify-end">
               <CreateStaff
                 open={createDialogOpen}
                 setOpen={setCreateDialogOpen}
-                values={newStaff}
-                onValuesChange={setNewStaff}
-                onCreate={handleCreateStaff}
+                values={newUser}
+                onValuesChange={setNewUser}
+                onCreate={handleCreateUser}
               />
             </div>
           </div>
@@ -191,13 +230,13 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
             <div>
-              <CardTitle className="text-lg">Team Directory</CardTitle>
+              <CardTitle className="text-lg">User Directory</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Track team roles, statuses, and assigned tickets.
+                Track account roles, statuses, and assigned ticket ownership.
               </p>
             </div>
             <div className="text-sm text-muted-foreground">
-              {filteredStaff.length} member{filteredStaff.length === 1 ? '' : 's'}
+              {filteredUsers.length} user{filteredUsers.length === 1 ? '' : 's'}
             </div>
           </div>
         </CardHeader>
@@ -227,17 +266,17 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {visibleStaff.length === 0 ? (
+                {visibleUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="h-32 text-center">
                       <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                        <UserRound className="w-5 h-5" />
-                        <p>No staff members found</p>
+                        <Users className="w-5 h-5" />
+                        <p>No users found</p>
                       </div>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  visibleStaff.map((member) => (
+                  visibleUsers.map((member) => (
                     <TableRow key={member.id} className="hover:bg-muted/20">
                       <TableCell className="min-w-[180px] px-4 py-4">
                         <div className="font-medium text-foreground">{member.name}</div>
@@ -249,17 +288,17 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
                         </div>
                       </TableCell>
                       <TableCell className="px-4 py-4">
-                        <Badge
-                          variant="outline"
-                        >
+                        <Badge variant="outline">
                           <Shield className="mr-1 h-3.5 w-3.5" />
-                          {member.role === 'admin' ? 'Admin' : 'Staff'}
+                          {member.role === 'admin'
+                            ? 'Admin'
+                            : member.role === 'staff'
+                              ? 'Staff'
+                              : 'User'}
                         </Badge>
                       </TableCell>
                       <TableCell className="px-4 py-4">
-                        <Badge
-                          variant="outline"
-                        >
+                        <Badge variant="outline">
                           {member.status === 'active' ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
@@ -295,21 +334,13 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
           </div>
 
           {type === 'page' ? (
-            <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 max-sm:flex-col max-sm:items-start">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium text-foreground">Staff results</p>
-                <p className="text-sm text-muted-foreground">
-                  Showing {visibleStaff.length} of {filteredStaff.length} staff members
-                </p>
-              </div>
-              <DataPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={(nextPage) => {
-                  void setStaffParams({ page: nextPage })
-                }}
-              />
-            </div>
+            <DataPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={(nextPage) => {
+                void setUserParams({ page: nextPage })
+              }}
+            />
           ) : null}
         </CardContent>
       </Card>
@@ -317,16 +348,16 @@ export function StaffSection({ type }: { type: 'page' | 'component' }) {
       <EditStaff
         open={editDialogOpen}
         setOpen={setEditDialogOpen}
-        staffMember={staffToEdit}
-        onUpdate={handleUpdateStaff}
-        onStaffChange={setStaffToEdit}
+        staffMember={userToEdit}
+        onUpdate={handleUpdateUser}
+        onStaffChange={setUserToEdit}
       />
 
       <DeleteStaff
         open={deleteDialogOpen}
         setOpen={setDeleteDialogOpen}
-        staffMember={staffToDelete}
-        onConfirm={handleDeleteStaff}
+        staffMember={userToDelete}
+        onConfirm={handleDeleteUser}
       />
     </div>
   )

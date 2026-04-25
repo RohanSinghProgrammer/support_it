@@ -3,7 +3,7 @@ import { AppLayout } from '@/components/app-layout'
 import { StatCard } from '@/components/stat-card'
 import { DashboardStats } from '../_components/dashboard-stats'
 import { PlatformsSection } from '../_components/platforms-section'
-import { StaffSection } from '../_components/staff-section'
+import { UsersSection } from '../_components/users-section'
 
 export const metadata = {
   title: 'Admin Dashboard | SupportIt',
@@ -29,8 +29,8 @@ export default function AdminDashboard() {
       {/* Platforms Management */}
       <PlatformsSection type='component' />
 
-      {/* Staff Management */}
-      <StaffSection type="component" />
+      {/* User Management */}
+      <UsersSection type="component" />
     </div>
   )
 }

@@ -3,12 +3,12 @@ import { Github, Linkedin } from 'lucide-react'
 export function Footer() {
   return (
     <footer className="border-t border-border bg-card mt-16">
-      <div className="mx-auto px-4 py-8 md:py-12">
+      <div className="mx-auto p-4">
         <div className="flex flex-col md:flex-row items-center justify-between">
           {/* Branding */}
           <div className="text-center md:text-left mb-6 md:mb-0">
             <p className="text-sm text-muted-foreground">
-              Built by{' '}
+              Built with ❤️ by{' '}
               <span className="font-semibold text-foreground">Rohan Singh</span>
             </p>
           </div>
@@ -34,13 +34,6 @@ export function Footer() {
               <Linkedin className="w-5 h-5" />
             </a>
           </div>
-        </div>
-
-        {/* Divider */}
-        <div className="border-t border-border mt-8 pt-8">
-          <p className="text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} SupportIt. All rights reserved.
-          </p>
         </div>
       </div>
     </footer>

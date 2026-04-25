@@ -103,9 +103,9 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
   const visiblePlatforms =
     type === 'page'
       ? filteredPlatforms.slice(
-          (currentPage - 1) * PLATFORMS_PAGE_SIZE,
-          currentPage * PLATFORMS_PAGE_SIZE
-        )
+        (currentPage - 1) * PLATFORMS_PAGE_SIZE,
+        currentPage * PLATFORMS_PAGE_SIZE
+      )
       : filteredPlatforms.slice(0, 3)
 
   return (
@@ -197,21 +197,13 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
       )}
 
       {type === 'page' ? (
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 max-sm:flex-col max-sm:items-start">
-          <div className="space-y-0.5">
-            <p className="text-sm font-medium text-foreground">Platform results</p>
-            <p className="text-sm text-muted-foreground">
-              Showing {visiblePlatforms.length} of {filteredPlatforms.length} platforms
-            </p>
-          </div>
-          <DataPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(nextPage) => {
-              void setPlatformParams({ page: nextPage })
-            }}
-          />
-        </div>
+        <DataPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(nextPage) => {
+            void setPlatformParams({ page: nextPage })
+          }}
+        />
       ) : null}
 
       <EditPlatform

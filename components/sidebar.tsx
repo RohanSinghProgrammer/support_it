@@ -6,12 +6,11 @@ import {
   BarChart3,
   Ticket,
   Users,
-  Settings,
-  LogOut,
   Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from './theme-toggle'
+import { LogoutConfirmButton } from './logout-confirm-button'
 
 interface SidebarProps {
   userRole?: 'admin' | 'staff' | 'user'
@@ -23,7 +22,7 @@ export function Sidebar({ userRole = 'admin' }: SidebarProps) {
   const adminLinks = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/admin/platforms', label: 'Platforms', icon: Zap },
-    { href: '/admin/staff', label: 'Staff Management', icon: Users },
+    { href: '/admin/users', label: 'User Management', icon: Users },
   ]
 
   const staffLinks = [
@@ -62,10 +61,9 @@ export function Sidebar({ userRole = 'admin' }: SidebarProps) {
                 href={link.href}
                 className={cn(
                   'flex items-center gap-3 px-4 py-2 rounded-lg transition-colors',
-                  'hover:bg-secondary',
                   isActive
                     ? 'bg-accent text-accent-foreground font-semibold'
-                    : 'text-foreground'
+                    : 'text-foreground hover:bg-secondary'
                 )}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
@@ -77,12 +75,14 @@ export function Sidebar({ userRole = 'admin' }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-border p-4 space-y-4">
+      <div className="border-t border-border p-4 space-y-4 flex gap-2">
+        <LogoutConfirmButton
+          variant="button"
+          className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-secondary text-foreground transition-colors border border-red-200"
+          iconClassName="size-4 text-red-500"
+          label="Logout"
+        />
         <ThemeToggle />
-        <button className="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-secondary text-foreground transition-colors">
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
-        </button>
       </div>
     </aside>
   )

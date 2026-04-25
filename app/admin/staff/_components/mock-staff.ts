@@ -37,7 +37,7 @@ export const mockStaff: StaffMember[] = [
     id: '5',
     name: 'Ethan Clark',
     email: 'ethan@ticketflow.com',
-    role: 'staff',
+    role: 'user',
     status: 'active',
     ticketsAssigned: 6,
   },
@@ -48,5 +48,13 @@ export const mockStaff: StaffMember[] = [
     role: 'admin',
     status: 'active',
     ticketsAssigned: 4,
+  },
+  {
+    id: '7',
+    name: 'Grace Miller',
+    email: 'grace@ticketflow.com',
+    role: 'user',
+    status: 'active',
+    ticketsAssigned: 1,
   },
 ]

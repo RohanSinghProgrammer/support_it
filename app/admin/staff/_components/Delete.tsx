@@ -24,8 +24,8 @@ const DeleteStaff = ({ open, setOpen, staffMember, onConfirm }: Props) => {
         <DialogHeader>
           <DialogTitle>Are you sure?</DialogTitle>
           <DialogDescription>
-            This will permanently remove {staffMember?.name ?? 'this staff member'} from
-            your support team.
+            This will permanently remove {staffMember?.name ?? 'this user'} from
+            your platform.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-0">

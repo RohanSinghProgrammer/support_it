@@ -1,18 +1,7 @@
-import React from 'react'
-import { StaffSection } from '../_components/staff-section'
+import { redirect } from 'next/navigation'
 
 const StaffPage = () => {
-    return (
-        <div className="p-4 md:p-8 space-y-8">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-                    Staff Management
-                </h1>
-            </div>
-            <StaffSection type="page" />
-        </div>
-    )
+    redirect('/admin/users')
 }
 
 export default StaffPage

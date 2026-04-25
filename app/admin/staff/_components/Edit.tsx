@@ -37,9 +37,9 @@ const EditStaff = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Update Staff Member</DialogTitle>
+          <DialogTitle>Update User</DialogTitle>
           <DialogDescription>
-            Edit the selected staff member details
+            Edit the selected user details
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -90,13 +90,14 @@ const EditStaff = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="user">End User</SelectItem>
                 <SelectItem value="staff">Support Staff</SelectItem>
                 <SelectItem value="admin">Administrator</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <Button onClick={onUpdate} className="w-full">
-            Update Staff Member
+            Update User
           </Button>
         </div>
       </DialogContent>
