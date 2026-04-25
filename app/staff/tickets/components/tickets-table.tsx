@@ -1,170 +1,255 @@
 'use client'
 
-import { useState } from 'react'
-import { DataTable } from '@/components/data-table'
+import { useEffect, useState } from 'react'
+import debounce from 'lodash.debounce'
+import { ChevronRight, Mail, Search, Ticket } from 'lucide-react'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { DataPagination } from '@/components/data-pagination'
 import { StatusBadge } from '@/components/status-badge'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { TicketDetail } from './ticket-detail'
+import { mockTickets } from './mock-tickets'
+import { StaffTicket } from './types'
 
-interface Ticket {
-  id: string
-  ticketNumber: string
-  subject: string
-  userEmail: string
-  status: 'open' | 'in-progress' | 'on-hold' | 'closed'
-  priority: 'low' | 'medium' | 'high'
-  platform: string
-  createdAt: string
-  description: string
-  assignedTo: string
+const STAFF_TICKETS_PAGE_SIZE = 5
+
+const priorityBadgeClassName: Record<StaffTicket['priority'], string> = {
+  high: 'rounded-full border-red-200 bg-red-50 px-3 py-1 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300',
+  medium:
+    'rounded-full border-amber-200 bg-amber-50 px-3 py-1 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300',
+  low: 'rounded-full border-blue-200 bg-blue-50 px-3 py-1 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300',
 }
 
-const mockTickets: Ticket[] = [
-  {
-    id: '1',
-    ticketNumber: 'TKT-001',
-    subject: 'Login issues on mobile app',
-    userEmail: 'john@example.com',
-    status: 'open',
-    priority: 'high',
-    platform: 'Mobile App',
-    createdAt: '2024-04-20',
-    description: 'User unable to log in on iOS app after latest update',
-    assignedTo: 'Alice Johnson',
-  },
-  {
-    id: '2',
-    ticketNumber: 'TKT-002',
-    subject: 'API documentation unclear',
-    userEmail: 'dev@company.com',
-    status: 'in-progress',
-    priority: 'medium',
-    platform: 'API Documentation',
-    createdAt: '2024-04-18',
-    description: 'Authentication section needs more examples',
-    assignedTo: 'Bob Smith',
-  },
-  {
-    id: '3',
-    ticketNumber: 'TKT-003',
-    subject: 'Payment integration error',
-    userEmail: 'merchant@store.com',
-    status: 'closed',
-    priority: 'high',
-    platform: 'Acme Corp Website',
-    createdAt: '2024-04-15',
-    description: 'Stripe integration throwing 500 errors',
-    assignedTo: 'Carol White',
-  },
-  {
-    id: '4',
-    ticketNumber: 'TKT-004',
-    subject: 'Feature request: Dark mode',
-    userEmail: 'user@example.com',
-    status: 'on-hold',
-    priority: 'low',
-    platform: 'Mobile App',
-    createdAt: '2024-04-10',
-    description: 'Users requesting dark mode toggle in settings',
-    assignedTo: 'Bob Smith',
-  },
-  {
-    id: '5',
-    ticketNumber: 'TKT-005',
-    subject: 'Database performance issues',
-    userEmail: 'admin@company.com',
-    status: 'in-progress',
-    priority: 'high',
-    platform: 'API Documentation',
-    createdAt: '2024-04-22',
-    description: 'Queries taking too long during peak hours',
-    assignedTo: 'Alice Johnson',
-  },
-]
-
 export function TicketsTable() {
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
-  const [tickets, setTickets] = useState<Ticket[]>(mockTickets)
+  const [selectedTicket, setSelectedTicket] = useState<StaffTicket | null>(null)
+  const [tickets, setTickets] = useState<StaffTicket[]>(mockTickets)
+  const [{ search, page }, setTicketParams] = useQueryStates({
+    search: parseAsString.withDefault(''),
+    page: parseAsInteger.withDefault(1),
+  })
+  const [searchInput, setSearchInput] = useState(search)
 
-  const updateTicketStatus = (ticketId: string, newStatus: Ticket['status']) => {
-    setTickets(
-      tickets.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t))
-    )
-    if (selectedTicket?.id === ticketId) {
-      setSelectedTicket({ ...selectedTicket, status: newStatus })
+  useEffect(() => {
+    setSearchInput(search)
+  }, [search])
+
+  useEffect(() => {
+    if (searchInput === search) {
+      return
     }
+
+    const syncSearch = debounce((value: string) => {
+      void setTicketParams({
+        search: value || null,
+        page: 1,
+      })
+    }, 350)
+
+    syncSearch(searchInput)
+
+    return () => syncSearch.cancel()
+  }, [search, searchInput, setTicketParams])
+
+  const filteredTickets = tickets.filter((ticket) =>
+    [
+      ticket.ticketNumber,
+      ticket.subject,
+      ticket.userEmail,
+      ticket.platform,
+      ticket.assignedTo,
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  )
+
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / STAFF_TICKETS_PAGE_SIZE))
+  const currentPage = Math.min(Math.max(page, 1), totalPages)
+
+  useEffect(() => {
+    if (page !== currentPage) {
+      void setTicketParams({ page: currentPage })
+    }
+  }, [currentPage, page, setTicketParams])
+
+  const visibleTickets = filteredTickets.slice(
+    (currentPage - 1) * STAFF_TICKETS_PAGE_SIZE,
+    currentPage * STAFF_TICKETS_PAGE_SIZE
+  )
+
+  const updateTicketStatus = (ticketId: string, newStatus: StaffTicket['status']) => {
+    setTickets((currentTickets) =>
+      currentTickets.map((ticket) =>
+        ticket.id === ticketId
+          ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString().split('T')[0] }
+          : ticket
+      )
+    )
+    setSelectedTicket((currentTicket) =>
+      currentTicket?.id === ticketId
+        ? {
+            ...currentTicket,
+            status: newStatus,
+            updatedAt: new Date().toISOString().split('T')[0],
+          }
+        : currentTicket
+    )
   }
 
   return (
     <>
-      <DataTable<Ticket>
-        columns={[
-          {
-            key: 'ticketNumber',
-            label: 'Ticket ID',
-            sortable: true,
-            render: (value) => (
-              <span className="font-semibold text-accent">{value}</span>
-            ),
-          },
-          {
-            key: 'subject',
-            label: 'Subject',
-            sortable: true,
-          },
-          {
-            key: 'userEmail',
-            label: 'User Email',
-            sortable: true,
-            render: (email) => <span className="text-sm">{email}</span>,
-          },
-          {
-            key: 'platform',
-            label: 'Platform',
-            sortable: true,
-          },
-          {
-            key: 'status',
-            label: 'Status',
-            sortable: true,
-            render: (status) => <StatusBadge status={status} />,
-          },
-          {
-            key: 'priority',
-            label: 'Priority',
-            render: (priority) => (
-              <span
-                className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                  priority === 'high'
-                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                    : priority === 'medium'
-                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                      : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                }`}
-              >
-                {priority.charAt(0).toUpperCase() + priority.slice(1)}
-              </span>
-            ),
-          },
-          {
-            key: 'createdAt',
-            label: 'Created',
-            sortable: true,
-          },
-        ]}
-        data={tickets}
-        searchPlaceholder="Search tickets by ID, subject, or email..."
-        searchableFields={['ticketNumber', 'subject', 'userEmail']}
-        onRowClick={(ticket) => setSelectedTicket(ticket)}
-      />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4 max-md:flex-col max-md:items-start">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Ticket Inbox</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Review incoming issues, adjust status, and respond without leaving the queue.
+            </p>
+          </div>
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Search tickets by ID, subject, email, or assignee..."
+              className="pl-10"
+            />
+          </div>
+        </div>
 
-      {/* Ticket Detail Slide-over */}
-      {selectedTicket && (
+        <Card className="border-border/60 shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
+              <div>
+                <CardTitle className="text-lg">Assigned tickets</CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Click any row to open the full detail panel and update the status.
+                </p>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {filteredTickets.length} ticket{filteredTickets.length === 1 ? '' : 's'}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="overflow-hidden rounded-xl border border-border/60 bg-background">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      Ticket
+                    </TableHead>
+                    <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      Requester
+                    </TableHead>
+                    <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      Platform
+                    </TableHead>
+                    <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      Status
+                    </TableHead>
+                    <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      Priority
+                    </TableHead>
+                    <TableHead className="h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      Updated
+                    </TableHead>
+                    <TableHead className="h-12 px-4 text-right text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                      View
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {visibleTickets.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-36 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                          <Ticket className="h-5 w-5" />
+                          <p>No tickets found</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    visibleTickets.map((ticket) => (
+                      <TableRow
+                        key={ticket.id}
+                        className="cursor-pointer hover:bg-muted/20"
+                        onClick={() => setSelectedTicket(ticket)}
+                      >
+                        <TableCell className="px-4 py-4">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-accent">{ticket.ticketNumber}</p>
+                            <p className="font-medium text-foreground">{ticket.subject}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-4">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Mail className="h-4 w-4" />
+                            <span className="truncate">{ticket.userEmail}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-4 py-4 text-muted-foreground">
+                          {ticket.platform}
+                        </TableCell>
+                        <TableCell className="px-4 py-4">
+                          <StatusBadge status={ticket.status} />
+                        </TableCell>
+                        <TableCell className="px-4 py-4">
+                          <Badge variant="outline" className={priorityBadgeClassName[ticket.priority]}>
+                            {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="px-4 py-4 text-muted-foreground">
+                          {ticket.updatedAt}
+                        </TableCell>
+                        <TableCell className="px-4 py-4">
+                          <div className="flex justify-end">
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 max-sm:flex-col max-sm:items-start">
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium text-foreground">Ticket results</p>
+                <p className="text-sm text-muted-foreground">
+                  Showing {visibleTickets.length} of {filteredTickets.length} tickets
+                </p>
+              </div>
+              <DataPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(nextPage) => {
+                  void setTicketParams({ page: nextPage })
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {selectedTicket ? (
         <TicketDetail
           ticket={selectedTicket}
           onClose={() => setSelectedTicket(null)}
           onStatusChange={updateTicketStatus}
         />
-      )}
+      ) : null}
     </>
   )
 }

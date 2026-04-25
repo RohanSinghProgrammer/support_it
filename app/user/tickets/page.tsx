@@ -1,73 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
-import { AppLayout } from '@/components/app-layout'
-import { StatusBadge } from '@/components/status-badge'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+import { useEffect, useState } from 'react'
+import debounce from 'lodash.debounce'
+import { Search } from 'lucide-react'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { DataPagination } from '@/components/data-pagination'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { TicketCard } from './components/ticket-card'
+import { CreateTicketDialog } from './_components/create-ticket-dialog'
+import { mockUserTickets } from './_components/mock-tickets'
+import { TicketCard } from './_components/ticket-card'
+import { UserTicket } from './_components/types'
 
-interface UserTicket {
-  id: string
-  ticketNumber: string
-  subject: string
-  status: 'open' | 'in-progress' | 'on-hold' | 'closed'
-  createdAt: string
-  updatedAt: string
-  description: string
-  platform: string
-}
-
-const mockUserTickets: UserTicket[] = [
-  {
-    id: '1',
-    ticketNumber: 'TKT-056',
-    subject: 'Unable to reset password',
-    status: 'closed',
-    createdAt: '2024-04-10',
-    updatedAt: '2024-04-12',
-    description: 'Password reset link not working',
-    platform: 'Acme Corp Website',
-  },
-  {
-    id: '2',
-    ticketNumber: 'TKT-087',
-    subject: 'Feature request: Export to CSV',
-    status: 'in-progress',
-    createdAt: '2024-04-15',
-    updatedAt: '2024-04-20',
-    description: 'Need ability to export data to CSV format',
-    platform: 'Mobile App',
-  },
-  {
-    id: '3',
-    ticketNumber: 'TKT-092',
-    subject: 'Dashboard loading slowly',
-    status: 'open',
-    createdAt: '2024-04-20',
-    updatedAt: '2024-04-20',
-    description: 'Dashboard takes 10+ seconds to load',
-    platform: 'Acme Corp Website',
-  },
-]
+const USER_TICKETS_PAGE_SIZE = 4
 
 export default function UserTickets() {
   const [tickets, setTickets] = useState<UserTicket[]>(mockUserTickets)
@@ -77,160 +22,184 @@ export default function UserTickets() {
     description: '',
     platform: '',
   })
+  const [{ search, page }, setTicketParams] = useQueryStates({
+    search: parseAsString.withDefault(''),
+    page: parseAsInteger.withDefault(1),
+  })
+  const [searchInput, setSearchInput] = useState(search)
+
+  useEffect(() => {
+    setSearchInput(search)
+  }, [search])
+
+  useEffect(() => {
+    if (searchInput === search) {
+      return
+    }
+
+    const syncSearch = debounce((value: string) => {
+      void setTicketParams({
+        search: value || null,
+        page: 1,
+      })
+    }, 350)
+
+    syncSearch(searchInput)
+
+    return () => syncSearch.cancel()
+  }, [search, searchInput, setTicketParams])
 
   const handleCreateTicket = () => {
-    if (newTicket.subject.trim() && newTicket.description.trim() && newTicket.platform) {
-      const ticket: UserTicket = {
-        id: Date.now().toString(),
-        ticketNumber: `TKT-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-        subject: newTicket.subject,
-        status: 'open',
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0],
-        description: newTicket.description,
-        platform: newTicket.platform,
-      }
-      setTickets([ticket, ...tickets])
-      setNewTicket({ subject: '', description: '', platform: '' })
-      setOpen(false)
+    if (!newTicket.subject.trim() || !newTicket.description.trim() || !newTicket.platform) {
+      return
     }
+
+    const ticket: UserTicket = {
+      id: Date.now().toString(),
+      ticketNumber: `TKT-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
+      subject: newTicket.subject,
+      status: 'open',
+      createdAt: new Date().toISOString().split('T')[0],
+      updatedAt: new Date().toISOString().split('T')[0],
+      description: newTicket.description,
+      platform: newTicket.platform,
+    }
+
+    setTickets((currentTickets) => [ticket, ...currentTickets])
+    setNewTicket({ subject: '', description: '', platform: '' })
+    setOpen(false)
   }
 
-  const openTickets = tickets.filter((t) => t.status === 'open').length
-  const closedTickets = tickets.filter((t) => t.status === 'closed').length
+  const filteredTickets = tickets.filter((ticket) =>
+    [ticket.ticketNumber, ticket.subject, ticket.description, ticket.platform]
+      .join(' ')
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  )
+
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / USER_TICKETS_PAGE_SIZE))
+  const currentPage = Math.min(Math.max(page, 1), totalPages)
+
+  useEffect(() => {
+    if (page !== currentPage) {
+      void setTicketParams({ page: currentPage })
+    }
+  }, [currentPage, page, setTicketParams])
+
+  const visibleTickets = filteredTickets.slice(
+    (currentPage - 1) * USER_TICKETS_PAGE_SIZE,
+    currentPage * USER_TICKETS_PAGE_SIZE
+  )
+
+  const openTickets = tickets.filter((ticket) => ticket.status === 'open').length
+  const closedTickets = tickets.filter((ticket) => ticket.status === 'closed').length
 
   return (
-    <AppLayout userRole="user">
-      <div className="p-4 md:p-8 space-y-8">
-        {/* Header */}
-        <div className="flex items-start justify-between flex-col md:flex-row gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              My Tickets
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Track your support requests and their status
-            </p>
-          </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                New Ticket
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Support Ticket</DialogTitle>
-                <DialogDescription>
-                  Describe your issue and we&apos;ll help you right away
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ticket-platform">Platform</Label>
-                  <Select
-                    value={newTicket.platform}
-                    onValueChange={(value) =>
-                      setNewTicket({ ...newTicket, platform: value })
-                    }
-                  >
-                    <SelectTrigger id="ticket-platform">
-                      <SelectValue placeholder="Select a platform" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="acme-website">Acme Corp Website</SelectItem>
-                      <SelectItem value="mobile-app">Mobile App</SelectItem>
-                      <SelectItem value="api-docs">API Documentation</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ticket-subject">Subject</Label>
-                  <Input
-                    id="ticket-subject"
-                    placeholder="Brief description of your issue"
-                    value={newTicket.subject}
-                    onChange={(e) =>
-                      setNewTicket({ ...newTicket, subject: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="ticket-description">Description</Label>
-                  <Textarea
-                    id="ticket-description"
-                    placeholder="Provide detailed information about your issue"
-                    value={newTicket.description}
-                    onChange={(e) =>
-                      setNewTicket({ ...newTicket, description: e.target.value })
-                    }
-                    className="min-h-[120px]"
-                  />
-                </div>
-                <Button onClick={handleCreateTicket} className="w-full">
-                  Create Ticket
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+    <div className="space-y-8">
+      <div className="flex items-start justify-between gap-4 max-md:flex-col">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground md:text-4xl">My Tickets</h1>
+          <p className="mt-2 text-muted-foreground">
+            Track support requests, search older conversations, and open new tickets quickly.
+          </p>
         </div>
+        <CreateTicketDialog
+          open={open}
+          setOpen={setOpen}
+          values={newTicket}
+          onValuesChange={setNewTicket}
+          onCreate={handleCreateTicket}
+        />
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Card className="border-border/60 shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
               Total Tickets
             </p>
-            <p className="text-2xl font-bold text-foreground mt-2">
-              {tickets.length}
-            </p>
-          </div>
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase">
+            <p className="mt-3 text-3xl font-bold text-foreground">{tickets.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border/60 shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
               Open
             </p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">
+            <p className="mt-3 text-3xl font-bold text-blue-600 dark:text-blue-400">
               {openTickets}
             </p>
-          </div>
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase">
+          </CardContent>
+        </Card>
+        <Card className="border-border/60 shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
               In Progress
             </p>
-            <p className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-2">
-              {tickets.filter((t) => t.status === 'in-progress').length}
+            <p className="mt-3 text-3xl font-bold text-amber-600 dark:text-amber-400">
+              {tickets.filter((ticket) => ticket.status === 'in-progress').length}
             </p>
-          </div>
-          <div className="rounded-lg border border-border bg-card p-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase">
+          </CardContent>
+        </Card>
+        <Card className="border-border/60 shadow-sm">
+          <CardContent className="p-5">
+            <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
               Resolved
             </p>
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-2">
+            <p className="mt-3 text-3xl font-bold text-green-600 dark:text-green-400">
               {closedTickets}
             </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4 max-md:flex-col max-md:items-start">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">All Tickets</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Search by ticket number, subject, platform, or issue details.
+            </p>
+          </div>
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Search your tickets..."
+              className="pl-10"
+            />
           </div>
         </div>
 
-        {/* Tickets List */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-foreground">All Tickets</h2>
-          {tickets.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No tickets yet</p>
-              <Button variant="outline" className="mt-4">
-                Create your first ticket
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {tickets.map((ticket) => (
-                <TicketCard key={ticket.id} ticket={ticket} />
-              ))}
-            </div>
-          )}
+        {visibleTickets.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 py-16 text-center">
+            <p className="text-muted-foreground">No tickets found for the current search.</p>
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {visibleTickets.map((ticket) => (
+              <TicketCard key={ticket.id} ticket={ticket} />
+            ))}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/20 px-4 py-3 max-sm:flex-col max-sm:items-start">
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-foreground">Ticket results</p>
+            <p className="text-sm text-muted-foreground">
+              Showing {visibleTickets.length} of {filteredTickets.length} tickets
+            </p>
+          </div>
+          <DataPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(nextPage) => {
+              void setTicketParams({ page: nextPage })
+            }}
+          />
         </div>
       </div>
-    </AppLayout>
+    </div>
   )
 }

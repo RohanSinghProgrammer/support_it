@@ -1,4 +1,3 @@
-import { AppLayout } from '@/components/app-layout'
 import { TicketsTable } from './components/tickets-table'
 
 export const metadata = {
@@ -8,21 +7,17 @@ export const metadata = {
 
 export default function StaffTickets() {
   return (
-    <AppLayout userRole="staff">
-      <div className="p-4 md:p-8 space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-            Support Tickets
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Manage and respond to customer support tickets
-          </p>
-        </div>
-
-        {/* Tickets List */}
-        <TicketsTable />
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground md:text-4xl">
+          Support Tickets
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          Manage customer requests, update ticket statuses, and keep responses moving.
+        </p>
       </div>
-    </AppLayout>
+
+      <TicketsTable />
+    </div>
   )
 }
