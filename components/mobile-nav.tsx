@@ -11,6 +11,7 @@ import {
   Users,
   Settings,
   Zap,
+  Code2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -35,11 +36,13 @@ export function MobileNav({ userRole = 'admin' }: MobileNavProps) {
     { href: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/admin/platforms', label: 'Platforms', icon: Zap },
     { href: '/admin/users', label: 'User Management', icon: Users },
+    { href: '/admin/embed-form', label: 'Embed Form', icon: Code2 },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
   ]
 
   const staffLinks = [
     { href: '/staff/tickets', label: 'Tickets', icon: Ticket },
+    { href: '/staff/embed-form', label: 'Embed Form', icon: Code2 },
     { href: '/staff/settings', label: 'Settings', icon: Settings },
   ]
 

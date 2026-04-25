@@ -6,6 +6,7 @@ import { LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -43,7 +44,7 @@ export function LogoutConfirmButton({
     ) : (
       <Button variant="ghost" className={cn("hover:bg-red-400!", className)}>
         <LogOut className={iconClassName} />
-        <span>{label}</span>
+        <span className='max-md:hidden'>{label}</span>
       </Button>
     )
 
@@ -58,10 +59,15 @@ export function LogoutConfirmButton({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline">Cancel</Button>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
           <Button
-            className='bg-red-500 hover:bg-red-600 text-white'
-            onClick={() => router.push('/')}
+            className="bg-red-500 text-white hover:bg-red-600"
+            onClick={() => {
+              setOpen(false)
+              router.push('/')
+            }}
           >
             Logout
           </Button>
