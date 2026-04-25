@@ -10,13 +10,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { StatusBadge } from '@/components/status-badge'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
@@ -99,22 +92,18 @@ export function TicketDetail({
                 Status
               </p>
               <div className="mt-3">
-                <Select
+                <select
                   value={ticket.status}
-                  onValueChange={(value) =>
-                    onStatusChange(ticket.id, value as StaffTicket['status'])
+                  onChange={(event) =>
+                    onStatusChange(ticket.id, event.target.value as StaffTicket['status'])
                   }
+                  className="border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 h-10 w-full rounded-md border bg-transparent px-3 py-2 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:ring-[3px]"
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="on-hold">On Hold</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="open">Open</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="on-hold">On Hold</option>
+                  <option value="closed">Closed</option>
+                </select>
               </div>
             </div>
             <div className="rounded-xl border border-border/60 bg-background p-4">
