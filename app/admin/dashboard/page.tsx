@@ -30,7 +30,7 @@ export default function AdminDashboard() {
       <PlatformsSection type='component' />
 
       {/* Staff Management */}
-      <StaffSection />
+      <StaffSection type="component" />
     </div>
   )
 }

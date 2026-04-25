@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Trash2, Eye, Search, Pen } from 'lucide-react';
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,8 @@ import CreatePlatform from '../platforms/_components/Create'
 import EditPlatform from '../platforms/_components/Edit'
 import Link from 'next/link'
 import DeletePlatform from '../platforms/_components/Delete'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { DataPagination } from '@/components/data-pagination'
 
 interface Platform {
   id: string
@@ -34,30 +36,50 @@ const mockPlatforms: Platform[] = [
   },
 ]
 
+const PLATFORMS_PAGE_SIZE = 2
+
 export function PlatformsSection({ type }: { type: "page" | "component" }) {
-  const [platforms, setPlatforms] = useState<Platform[]>(mockPlatforms)
-  const [newPlatform, setNewPlatform] = useState({ name: '', description: '' })
+  const [platforms] = useState<Platform[]>(mockPlatforms)
   const [open, setOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [platformToEdit, setPlatformToEdit] = useState<Platform | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [platformToDelete, setPlatformToDelete] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [{ search, page }, setPlatformParams] = useQueryStates({
+    search: parseAsString.withDefault(''),
+    page: parseAsInteger.withDefault(1),
+  })
+  const activeSearch = type === 'page' ? search : ''
 
   const handleEditClick = (platform: Platform) => {
     setPlatformToEdit(platform)
     setEditDialogOpen(true)
   }
 
-  const handleDeleteClick = (id: string) => {
-    setPlatformToDelete(id)
+  const handleDeleteClick = (_id: string) => {
     setDeleteDialogOpen(true)
   }
 
   const filteredPlatforms = platforms.filter(platform =>
-    platform.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    platform.description.toLowerCase().includes(searchQuery.toLowerCase())
+    platform.name.toLowerCase().includes(activeSearch.toLowerCase()) ||
+    platform.description.toLowerCase().includes(activeSearch.toLowerCase())
   )
+
+  const totalPages = Math.max(1, Math.ceil(filteredPlatforms.length / PLATFORMS_PAGE_SIZE))
+  const currentPage = type === 'page' ? Math.min(Math.max(page, 1), totalPages) : 1
+
+  useEffect(() => {
+    if (type === 'page' && page !== currentPage) {
+      void setPlatformParams({ page: currentPage })
+    }
+  }, [currentPage, page, setPlatformParams, type])
+
+  const visiblePlatforms =
+    type === 'page'
+      ? filteredPlatforms.slice(
+          (currentPage - 1) * PLATFORMS_PAGE_SIZE,
+          currentPage * PLATFORMS_PAGE_SIZE
+        )
+      : filteredPlatforms.slice(0, 3)
 
   return (
     <div className="space-y-6">
@@ -83,8 +105,13 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search platforms by name or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                value={activeSearch}
+                onChange={(e) =>
+                  void setPlatformParams({
+                    search: e.target.value || null,
+                    page: 1,
+                  })
+                }
                 className="pl-10 pr-4 py-2 w-full max-md:w-full"
               />
             </div>
@@ -102,7 +129,7 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredPlatforms.map((platform) => (
+          {visiblePlatforms.map((platform) => (
             <Card
               key={platform.id}
               className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 hover:border-primary/20"
@@ -146,6 +173,21 @@ export function PlatformsSection({ type }: { type: "page" | "component" }) {
           ))}
         </div>
       )}
+
+      {type === 'page' ? (
+        <div className="flex items-center justify-between gap-4 max-sm:flex-col">
+          <p className="text-sm text-muted-foreground">
+            Showing {visiblePlatforms.length} of {filteredPlatforms.length} platforms
+          </p>
+          <DataPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(nextPage) => {
+              void setPlatformParams({ page: nextPage })
+            }}
+          />
+        </div>
+      ) : null}
 
       <EditPlatform
         open={editDialogOpen}

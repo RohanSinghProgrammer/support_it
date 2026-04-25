@@ -10,7 +10,7 @@ const StaffPage = () => {
                     Staff Management
                 </h1>
             </div>
-            <StaffSection />
+            <StaffSection type="page" />
         </div>
     )
 }

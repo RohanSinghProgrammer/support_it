@@ -1,244 +1,307 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Trash2, Mail, Shield } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { Eye, Mail, Pencil, Search, Shield, Trash2, UserRound } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { DataTable } from '@/components/data-table'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Label } from '@/components/ui/label'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { DataPagination } from '@/components/data-pagination'
+import CreateStaff from '../staff/_components/Create'
+import DeleteStaff from '../staff/_components/Delete'
+import EditStaff from '../staff/_components/Edit'
+import { mockStaff } from '../staff/_components/mock-staff'
+import { StaffMember, StaffRole } from '../staff/_components/types'
 
-interface StaffMember {
-  id: string
-  name: string
-  email: string
-  role: 'admin' | 'staff'
-  status: 'active' | 'inactive'
-  ticketsAssigned: number
+const STAFF_PAGE_SIZE = 5
+
+const roleBadgeClassName: Record<StaffMember['role'], string> = {
+  admin: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300',
+  staff: 'border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-300',
 }
 
-const mockStaff: StaffMember[] = [
-  {
-    id: '1',
-    name: 'Alice Johnson',
-    email: 'alice@ticketflow.com',
-    role: 'admin',
-    status: 'active',
-    ticketsAssigned: 12,
-  },
-  {
-    id: '2',
-    name: 'Bob Smith',
-    email: 'bob@ticketflow.com',
-    role: 'staff',
-    status: 'active',
-    ticketsAssigned: 8,
-  },
-  {
-    id: '3',
-    name: 'Carol White',
-    email: 'carol@ticketflow.com',
-    role: 'staff',
-    status: 'active',
-    ticketsAssigned: 15,
-  },
-  {
-    id: '4',
-    name: 'David Brown',
-    email: 'david@ticketflow.com',
-    role: 'staff',
-    status: 'inactive',
-    ticketsAssigned: 0,
-  },
-]
+const statusBadgeClassName: Record<StaffMember['status'], string> = {
+  active: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300',
+  inactive: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300',
+}
 
-export function StaffSection() {
+export function StaffSection({ type }: { type: 'page' | 'component' }) {
   const [staff, setStaff] = useState<StaffMember[]>(mockStaff)
-  const [newStaff, setNewStaff] = useState({
+  const [newStaff, setNewStaff] = useState<{
+    name: string
+    email: string
+    role: StaffRole
+  }>({
     name: '',
     email: '',
     role: 'staff' as const,
   })
-  const [open, setOpen] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [staffToEdit, setStaffToEdit] = useState<StaffMember | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null)
+  const [{ search, page }, setStaffParams] = useQueryStates({
+    search: parseAsString.withDefault(''),
+    page: parseAsInteger.withDefault(1),
+  })
+  const activeSearch = type === 'page' ? search : ''
 
-  const handleAddStaff = () => {
-    if (newStaff.name.trim() && newStaff.email.trim()) {
-      setStaff([
-        ...staff,
-        {
-          id: Date.now().toString(),
-          ...newStaff,
-          status: 'active',
-          ticketsAssigned: 0,
-        },
-      ])
-      setNewStaff({ name: '', email: '', role: 'staff' })
-      setOpen(false)
+  const filteredStaff = staff.filter((member) =>
+    `${member.name} ${member.email}`.toLowerCase().includes(activeSearch.toLowerCase())
+  )
+
+  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / STAFF_PAGE_SIZE))
+  const currentPage = type === 'page' ? Math.min(Math.max(page, 1), totalPages) : 1
+
+  useEffect(() => {
+    if (type === 'page' && page !== currentPage) {
+      void setStaffParams({ page: currentPage })
     }
+  }, [currentPage, page, setStaffParams, type])
+
+  const visibleStaff =
+    type === 'page'
+      ? filteredStaff.slice((currentPage - 1) * STAFF_PAGE_SIZE, currentPage * STAFF_PAGE_SIZE)
+      : filteredStaff.slice(0, 4)
+
+  const handleCreateStaff = () => {
+    if (!newStaff.name.trim() || !newStaff.email.trim()) {
+      return
+    }
+
+    setStaff((currentStaff) => [
+      ...currentStaff,
+      {
+        id: Date.now().toString(),
+        ...newStaff,
+        status: 'active',
+        ticketsAssigned: 0,
+      },
+    ])
+    setNewStaff({ name: '', email: '', role: 'staff' })
+    setCreateDialogOpen(false)
   }
 
-  const handleDeleteStaff = (id: string) => {
-    setStaff(staff.filter((s) => s.id !== id))
+  const handleEditClick = (member: StaffMember) => {
+    setStaffToEdit(member)
+    setEditDialogOpen(true)
+  }
+
+  const handleUpdateStaff = () => {
+    if (!staffToEdit) {
+      return
+    }
+
+    setStaff((currentStaff) =>
+      currentStaff.map((member) =>
+        member.id === staffToEdit.id ? staffToEdit : member
+      )
+    )
+    setEditDialogOpen(false)
+  }
+
+  const handleDeleteClick = (member: StaffMember) => {
+    setStaffToDelete(member)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteStaff = () => {
+    if (!staffToDelete) {
+      return
+    }
+
+    setStaff((currentStaff) =>
+      currentStaff.filter((member) => member.id !== staffToDelete.id)
+    )
+    setDeleteDialogOpen(false)
+    setStaffToDelete(null)
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-col md:flex-row gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Staff Management</h2>
-          <p className="text-muted-foreground text-sm mt-1">
-            Manage support team members
-          </p>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Staff Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Staff Member</DialogTitle>
-              <DialogDescription>
-                Invite a new team member to the support team
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="staff-name">Full Name</Label>
-                <Input
-                  id="staff-name"
-                  placeholder="e.g., John Doe"
-                  value={newStaff.name}
-                  onChange={(e) =>
-                    setNewStaff({ ...newStaff, name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="staff-email">Email</Label>
-                <Input
-                  id="staff-email"
-                  type="email"
-                  placeholder="john@ticketflow.com"
-                  value={newStaff.email}
-                  onChange={(e) =>
-                    setNewStaff({ ...newStaff, email: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="staff-role">Role</Label>
-                <Select
-                  value={newStaff.role}
-                  onValueChange={(value) =>
-                    setNewStaff({
-                      ...newStaff,
-                      role: value as 'admin' | 'staff',
-                    })
-                  }
-                >
-                  <SelectTrigger id="staff-role">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="staff">Support Staff</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleAddStaff} className="w-full">
-                Add Staff Member
-              </Button>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        {type === 'component' ? (
+          <>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Staff</h2>
+              <p className="text-muted-foreground text-sm mt-1 hidden md:block">
+                Manage support team members and workloads
+              </p>
             </div>
-          </DialogContent>
-        </Dialog>
+            <Link href="/admin/staff">
+              <Button variant="outline" className="gap-2">
+                <Eye className="w-4 h-4" />
+                View All Staff
+              </Button>
+            </Link>
+          </>
+        ) : (
+          <div className="w-full flex gap-2 max-md:flex-col">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={activeSearch}
+                onChange={(event) =>
+                  void setStaffParams({
+                    search: event.target.value || null,
+                    page: 1,
+                  })
+                }
+                placeholder="Search staff by name or email..."
+                className="pl-10"
+              />
+            </div>
+            <div className="flex justify-end">
+              <CreateStaff
+                open={createDialogOpen}
+                setOpen={setCreateDialogOpen}
+                values={newStaff}
+                onValuesChange={setNewStaff}
+                onCreate={handleCreateStaff}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Staff Table */}
-      <DataTable<StaffMember>
-        columns={[
-          {
-            key: 'name',
-            label: 'Name',
-            sortable: true,
-          },
-          {
-            key: 'email',
-            label: 'Email',
-            sortable: true,
-            render: (email) => (
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm">{email}</span>
-              </div>
-            ),
-          },
-          {
-            key: 'role',
-            label: 'Role',
-            render: (role) => (
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-muted-foreground" />
-                <span className="capitalize text-sm">
-                  {role === 'admin' ? 'Admin' : 'Staff'}
-                </span>
-              </div>
-            ),
-          },
-          {
-            key: 'status',
-            label: 'Status',
-            render: (status) => (
-              <span
-                className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                  status === 'active'
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                    : 'bg-slate-100 text-slate-700 dark:bg-slate-900/30 dark:text-slate-400'
-                }`}
-              >
-                {status === 'active' ? 'Active' : 'Inactive'}
-              </span>
-            ),
-          },
-          {
-            key: 'ticketsAssigned',
-            label: 'Tickets',
-            sortable: true,
-            render: (count) => <span className="font-semibold">{count}</span>,
-          },
-          {
-            key: 'id',
-            label: 'Actions',
-            render: (_, row) => (
-              <button
-                onClick={() => handleDeleteStaff(row.id)}
-                className="p-2 hover:bg-secondary rounded-lg transition-colors text-destructive"
-                aria-label="Delete staff member"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            ),
-          },
-        ]}
-        data={staff}
-        searchPlaceholder="Search staff by name or email..."
-        searchableFields={['name', 'email']}
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
+            <div>
+              <CardTitle className="text-lg">Team Directory</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Track team roles, statuses, and assigned tickets.
+              </p>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {filteredStaff.length} member{filteredStaff.length === 1 ? '' : 's'}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-border/60 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30 hover:bg-muted/30">
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Tickets</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleStaff.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-32 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                        <UserRound className="w-5 h-5" />
+                        <p>No staff members found</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  visibleStaff.map((member) => (
+                    <TableRow key={member.id}>
+                      <TableCell className="min-w-[180px]">
+                        <div className="font-medium text-foreground">{member.name}</div>
+                      </TableCell>
+                      <TableCell className="min-w-[220px]">
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Mail className="w-4 h-4" />
+                          <span>{member.email}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={roleBadgeClassName[member.role]}
+                        >
+                          <Shield className="mr-1 h-3.5 w-3.5" />
+                          {member.role === 'admin' ? 'Admin' : 'Staff'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={statusBadgeClassName[member.status]}
+                        >
+                          {member.status === 'active' ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {member.ticketsAssigned}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditClick(member)}
+                            aria-label={`Edit ${member.name}`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteClick(member)}
+                            aria-label={`Delete ${member.name}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {type === 'page' ? (
+            <div className="flex items-center justify-between gap-4 max-sm:flex-col">
+              <p className="text-sm text-muted-foreground">
+                Showing {visibleStaff.length} of {filteredStaff.length} staff members
+              </p>
+              <DataPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(nextPage) => {
+                  void setStaffParams({ page: nextPage })
+                }}
+              />
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <EditStaff
+        open={editDialogOpen}
+        setOpen={setEditDialogOpen}
+        staffMember={staffToEdit}
+        onUpdate={handleUpdateStaff}
+        onStaffChange={setStaffToEdit}
+      />
+
+      <DeleteStaff
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        staffMember={staffToDelete}
+        onConfirm={handleDeleteStaff}
       />
     </div>
   )
