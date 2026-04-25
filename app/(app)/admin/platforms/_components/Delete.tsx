@@ -12,17 +12,19 @@ import { Button } from '@/components/ui/button'
 interface Props {
     open: boolean,
     setOpen: Dispatch<SetStateAction<boolean>>
+    platformName?: string
+    onConfirm: () => void
 }
 
-const DeletePlatform = ({ open, setOpen }: Props) => {
+const DeletePlatform = ({ open, setOpen, platformName, onConfirm }: Props) => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Are you sure?</DialogTitle>
                     <DialogDescription>
-                        This action cannot be undone. This will permanently delete the platform
-                        and remove it from our servers.
+                        This action cannot be undone. This will permanently delete{' '}
+                        {platformName ?? 'this platform'} and remove it from our servers.
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="gap-2 sm:gap-0">
@@ -35,7 +37,7 @@ const DeletePlatform = ({ open, setOpen }: Props) => {
                     <Button
                         variant="destructive"
                         className='ml-2'
-                        // onClick={handleConfirmDelete}
+                        onClick={onConfirm}
                     >
                         Delete
                     </Button>

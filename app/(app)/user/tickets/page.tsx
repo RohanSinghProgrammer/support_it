@@ -1,27 +1,32 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import debounce from 'lodash.debounce'
 import { Search } from 'lucide-react'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
+import { authClient } from '@/lib/auth-client'
 import { DataPagination } from '@/components/data-pagination'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { createTicket, getAllTickets } from '@/actions/tickets.actions'
 import { CreateTicketDialog } from './_components/create-ticket-dialog'
-import { mockUserTickets } from './_components/mock-tickets'
 import { TicketCard } from './_components/ticket-card'
 import { UserTicket } from './_components/types'
 
 const USER_TICKETS_PAGE_SIZE = 4
 
 export default function UserTickets() {
-  const [tickets, setTickets] = useState<UserTicket[]>(mockUserTickets)
+  const { data: session } = authClient.useSession()
+  const [tickets, setTickets] = useState<UserTicket[]>([])
   const [open, setOpen] = useState(false)
   const [newTicket, setNewTicket] = useState({
     subject: '',
     description: '',
     platform: '',
   })
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [isPending, startTransition] = useTransition()
   const [{ search, page }, setTicketParams] = useQueryStates({
     search: parseAsString.withDefault(''),
     page: parseAsInteger.withDefault(1),
@@ -31,6 +36,44 @@ export default function UserTickets() {
   useEffect(() => {
     setSearchInput(search)
   }, [search])
+
+  const currentUserEmail = session?.user.email ?? 'user@example.com'
+
+  const loadTickets = (searchValue: string, pageValue: number) => {
+    startTransition(async () => {
+      const result = await getAllTickets({
+        role: 'user',
+        search: searchValue,
+        page: 1,
+        pageSize: 100,
+      })
+
+      const ownTickets = result.data.filter((ticket) => ticket.userEmail === currentUserEmail)
+      const totalOwnTickets = ownTickets.length
+      const normalizedTotalPages = Math.max(1, Math.ceil(totalOwnTickets / USER_TICKETS_PAGE_SIZE))
+      const normalizedPage = Math.min(Math.max(pageValue, 1), normalizedTotalPages)
+      const startIndex = (normalizedPage - 1) * USER_TICKETS_PAGE_SIZE
+
+      setTickets(
+        ownTickets.slice(startIndex, startIndex + USER_TICKETS_PAGE_SIZE).map((ticket) => ({
+          id: ticket.id,
+          ticketNumber: ticket.ticketNumber,
+          subject: ticket.subject,
+          status: ticket.status,
+          createdAt: ticket.createdAt,
+          updatedAt: ticket.updatedAt,
+          description: ticket.description,
+          platform: ticket.platform,
+        }))
+      )
+      setTotalPages(normalizedTotalPages)
+      setTotalItems(totalOwnTickets)
+    })
+  }
+
+  useEffect(() => {
+    loadTickets(search, page)
+  }, [currentUserEmail, page, search])
 
   useEffect(() => {
     if (searchInput === search) {
@@ -54,30 +97,27 @@ export default function UserTickets() {
       return
     }
 
-    const ticket: UserTicket = {
-      id: Date.now().toString(),
-      ticketNumber: `TKT-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-      subject: newTicket.subject,
-      status: 'open',
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0],
-      description: newTicket.description,
-      platform: newTicket.platform,
-    }
+    startTransition(async () => {
+      await createTicket({
+        role: 'user',
+        data: {
+          subject: newTicket.subject,
+          description: newTicket.description,
+          platform: newTicket.platform,
+          status: 'open',
+          priority: 'medium',
+          userEmail: currentUserEmail,
+          assignedTo: 'Unassigned',
+        },
+      })
 
-    setTickets((currentTickets) => [ticket, ...currentTickets])
-    setNewTicket({ subject: '', description: '', platform: '' })
-    setOpen(false)
+      setNewTicket({ subject: '', description: '', platform: '' })
+      setOpen(false)
+      void setTicketParams({ page: 1 })
+      loadTickets(search, 1)
+    })
   }
 
-  const filteredTickets = tickets.filter((ticket) =>
-    [ticket.ticketNumber, ticket.subject, ticket.description, ticket.platform]
-      .join(' ')
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  )
-
-  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / USER_TICKETS_PAGE_SIZE))
   const currentPage = Math.min(Math.max(page, 1), totalPages)
 
   useEffect(() => {
@@ -86,13 +126,14 @@ export default function UserTickets() {
     }
   }, [currentPage, page, setTicketParams])
 
-  const visibleTickets = filteredTickets.slice(
-    (currentPage - 1) * USER_TICKETS_PAGE_SIZE,
-    currentPage * USER_TICKETS_PAGE_SIZE
+  const openTickets = useMemo(
+    () => tickets.filter((ticket) => ticket.status === 'open').length,
+    [tickets]
   )
-
-  const openTickets = tickets.filter((ticket) => ticket.status === 'open').length
-  const closedTickets = tickets.filter((ticket) => ticket.status === 'closed').length
+  const closedTickets = useMemo(
+    () => tickets.filter((ticket) => ticket.status === 'closed').length,
+    [tickets]
+  )
 
   return (
     <div className="space-y-8">
@@ -118,7 +159,7 @@ export default function UserTickets() {
             <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
               Total Tickets
             </p>
-            <p className="mt-3 text-3xl font-bold text-foreground">{tickets.length}</p>
+            <p className="mt-3 text-3xl font-bold text-foreground">{totalItems}</p>
           </CardContent>
         </Card>
         <Card className="border-border/60 shadow-sm">
@@ -167,29 +208,30 @@ export default function UserTickets() {
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Search your tickets..."
+              disabled={isPending}
               className="pl-10"
             />
           </div>
         </div>
 
-        {visibleTickets.length === 0 ? (
+        {tickets.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/70 bg-muted/10 py-16 text-center">
             <p className="text-muted-foreground">No tickets found for the current search.</p>
           </div>
         ) : (
           <div className="grid gap-4">
-            {visibleTickets.map((ticket) => (
+            {tickets.map((ticket) => (
               <TicketCard key={ticket.id} ticket={ticket} />
             ))}
           </div>
         )}
-          <DataPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={(nextPage) => {
-              void setTicketParams({ page: nextPage })
-            }}
-          />
+        <DataPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(nextPage) => {
+            void setTicketParams({ page: nextPage })
+          }}
+        />
       </div>
     </div>
   )

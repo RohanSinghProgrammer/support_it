@@ -12,12 +12,20 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 
+interface CreatePlatformValues {
+    name: string
+    description: string
+}
+
 interface Props {
     open: boolean,
     setOpen: Dispatch<SetStateAction<boolean>>
+    values: CreatePlatformValues
+    onValuesChange: (values: CreatePlatformValues) => void
+    onCreate: () => void
 }
 
-const CreatePlatform = ({ open, setOpen }: Props) => {
+const CreatePlatform = ({ open, setOpen, values, onValuesChange, onCreate }: Props) => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -39,10 +47,10 @@ const CreatePlatform = ({ open, setOpen }: Props) => {
                         <Input
                             id="platform-name"
                             placeholder="e.g., Acme Corp Website"
-                        // value={newPlatform.name}
-                        // onChange={(e) =>
-                        //     setNewPlatform({ ...newPlatform, name: e.target.value })
-                        // }
+                            value={values.name}
+                            onChange={(e) =>
+                                onValuesChange({ ...values, name: e.target.value })
+                            }
                         />
                     </div>
                     <div className="space-y-2">
@@ -50,15 +58,13 @@ const CreatePlatform = ({ open, setOpen }: Props) => {
                         <Input
                             id="platform-desc"
                             placeholder="e.g., Main customer support portal"
-                        // value={newPlatform.description}
-                        // onChange={(e) =>
-                        //     setNewPlatform({ ...newPlatform, description: e.target.value })
-                        // }
+                            value={values.description}
+                            onChange={(e) =>
+                                onValuesChange({ ...values, description: e.target.value })
+                            }
                         />
                     </div>
-                    <Button
-                        // onClick={handleAddPlatform} 
-                        className="w-full">
+                    <Button onClick={onCreate} className="w-full">
                         Add Platform
                     </Button>
                 </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import debounce from 'lodash.debounce'
 import { ChevronRight, Mail, Search, Ticket } from 'lucide-react'
 import { parseAsInteger, parseAsString, useQueryStates } from 'nuqs'
@@ -17,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { getAllTickets, updateTicket } from '@/actions/tickets.actions'
 import { TicketDetail } from './ticket-detail'
-import { mockTickets } from './mock-tickets'
 import { StaffTicket } from './types'
 
 const STAFF_TICKETS_PAGE_SIZE = 5
@@ -32,7 +32,10 @@ const priorityBadgeClassName: Record<StaffTicket['priority'], string> = {
 
 export function TicketsTable() {
   const [selectedTicket, setSelectedTicket] = useState<StaffTicket | null>(null)
-  const [tickets, setTickets] = useState<StaffTicket[]>(mockTickets)
+  const [tickets, setTickets] = useState<StaffTicket[]>([])
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [isPending, startTransition] = useTransition()
   const [{ search, page }, setTicketParams] = useQueryStates({
     search: parseAsString.withDefault(''),
     page: parseAsInteger.withDefault(1),
@@ -42,6 +45,25 @@ export function TicketsTable() {
   useEffect(() => {
     setSearchInput(search)
   }, [search])
+
+  const loadTickets = (searchValue: string, pageValue: number) => {
+    startTransition(async () => {
+      const result = await getAllTickets({
+        role: 'staff',
+        search: searchValue,
+        page: pageValue,
+        pageSize: STAFF_TICKETS_PAGE_SIZE,
+      })
+
+      setTickets(result.data)
+      setTotalPages(result.pagination.totalPages)
+      setTotalItems(result.pagination.totalItems)
+    })
+  }
+
+  useEffect(() => {
+    loadTickets(search, page)
+  }, [page, search])
 
   useEffect(() => {
     if (searchInput === search) {
@@ -60,20 +82,6 @@ export function TicketsTable() {
     return () => syncSearch.cancel()
   }, [search, searchInput, setTicketParams])
 
-  const filteredTickets = tickets.filter((ticket) =>
-    [
-      ticket.ticketNumber,
-      ticket.subject,
-      ticket.userEmail,
-      ticket.platform,
-      ticket.assignedTo,
-    ]
-      .join(' ')
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  )
-
-  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / STAFF_TICKETS_PAGE_SIZE))
   const currentPage = Math.min(Math.max(page, 1), totalPages)
 
   useEffect(() => {
@@ -82,28 +90,25 @@ export function TicketsTable() {
     }
   }, [currentPage, page, setTicketParams])
 
-  const visibleTickets = filteredTickets.slice(
-    (currentPage - 1) * STAFF_TICKETS_PAGE_SIZE,
-    currentPage * STAFF_TICKETS_PAGE_SIZE
-  )
-
   const updateTicketStatus = (ticketId: string, newStatus: StaffTicket['status']) => {
-    setTickets((currentTickets) =>
-      currentTickets.map((ticket) =>
-        ticket.id === ticketId
-          ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString().split('T')[0] }
-          : ticket
+    startTransition(async () => {
+      const result = await updateTicket({
+        role: 'staff',
+        id: ticketId,
+        data: { status: newStatus },
+      })
+
+      if (!result.data) {
+        return
+      }
+
+      setTickets((currentTickets) =>
+        currentTickets.map((ticket) => (ticket.id === ticketId ? result.data! : ticket))
       )
-    )
-    setSelectedTicket((currentTicket) =>
-      currentTicket?.id === ticketId
-        ? {
-          ...currentTicket,
-          status: newStatus,
-          updatedAt: new Date().toISOString().split('T')[0],
-        }
-        : currentTicket
-    )
+      setSelectedTicket((currentTicket) =>
+        currentTicket?.id === ticketId ? result.data : currentTicket
+      )
+    })
   }
 
   return (
@@ -115,7 +120,8 @@ export function TicketsTable() {
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search tickets by ID, subject, email, or assignee..."
-            className="pl-10 w-full"
+            disabled={isPending}
+            className="w-full pl-10"
           />
         </div>
 
@@ -129,7 +135,7 @@ export function TicketsTable() {
                 </p>
               </div>
               <div className="text-sm text-muted-foreground">
-                {filteredTickets.length} ticket{filteredTickets.length === 1 ? '' : 's'}
+                {totalItems} ticket{totalItems === 1 ? '' : 's'}
               </div>
             </div>
           </CardHeader>
@@ -162,7 +168,7 @@ export function TicketsTable() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {visibleTickets.length === 0 ? (
+                  {tickets.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="h-36 text-center">
                         <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -172,7 +178,7 @@ export function TicketsTable() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    visibleTickets.map((ticket) => (
+                    tickets.map((ticket) => (
                       <TableRow
                         key={ticket.id}
                         className="cursor-pointer hover:bg-muted/20"
