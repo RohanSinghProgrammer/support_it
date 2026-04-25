@@ -88,62 +88,6 @@ export default function Home() {
             </p>
           </div>
         </div>
-
-        {/* Demo Sections */}
-        <div className="space-y-16">
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2">
-                Quick Access
-              </h2>
-              <p className="text-muted-foreground">
-                Navigate to different sections of the application
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Link href="/admin/dashboard">
-                <div className="p-6 rounded-lg border border-border bg-card hover:border-accent hover:shadow-md transition-all cursor-pointer">
-                  <BarChart3 className="w-8 h-8 text-accent mb-3" />
-                  <h3 className="font-semibold text-foreground">Admin Dashboard</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Manage platforms, staff, and view system statistics
-                  </p>
-                </div>
-              </Link>
-
-              <Link href="/staff/tickets">
-                <div className="p-6 rounded-lg border border-border bg-card hover:border-accent hover:shadow-md transition-all cursor-pointer">
-                  <Ticket className="w-8 h-8 text-accent mb-3" />
-                  <h3 className="font-semibold text-foreground">Staff Tickets</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    View and manage customer support tickets
-                  </p>
-                </div>
-              </Link>
-
-              <Link href="/user/tickets">
-                <div className="p-6 rounded-lg border border-border bg-card hover:border-accent hover:shadow-md transition-all cursor-pointer">
-                  <Users className="w-8 h-8 text-accent mb-3" />
-                  <h3 className="font-semibold text-foreground">User Tickets</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Track your submitted support requests
-                  </p>
-                </div>
-              </Link>
-
-              <Link href="/embed/form">
-                <div className="p-6 rounded-lg border border-border bg-card hover:border-accent hover:shadow-md transition-all cursor-pointer">
-                  <Code2 className="w-8 h-8 text-accent mb-3" />
-                  <h3 className="font-semibold text-foreground">Embed Form</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Standalone ticket submission form
-                  </p>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* Footer */}
