@@ -6,27 +6,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 
 interface EmbeddableFormProps {
   platform: string
-  software: string
 }
 
-export function EmbeddableForm({ platform, software }: EmbeddableFormProps) {
+export function EmbeddableForm({ platform }: EmbeddableFormProps) {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
-    priority: 'medium',
     description: '',
   })
 
@@ -45,7 +36,6 @@ export function EmbeddableForm({ platform, software }: EmbeddableFormProps) {
           name: '',
           email: '',
           subject: '',
-          priority: 'medium',
           description: '',
         })
       }, 3000)
@@ -81,14 +71,6 @@ export function EmbeddableForm({ platform, software }: EmbeddableFormProps) {
             Platform
           </p>
           <p className="text-sm font-semibold text-foreground">{platform}</p>
-          {software !== 'General' && (
-            <>
-              <p className="text-xs font-medium text-muted-foreground uppercase mt-3">
-                Software
-              </p>
-              <p className="text-sm font-semibold text-foreground">{software}</p>
-            </>
-          )}
         </div>
       </div>
 
@@ -141,28 +123,6 @@ export function EmbeddableForm({ platform, software }: EmbeddableFormProps) {
           }
           required
         />
-      </div>
-
-      {/* Priority */}
-      <div className="space-y-2">
-        <Label htmlFor="priority" className="text-sm font-medium">
-          Priority
-        </Label>
-        <Select
-          value={formData.priority}
-          onValueChange={(value) =>
-            setFormData({ ...formData, priority: value })
-          }
-        >
-          <SelectTrigger id="priority">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low">Low - General inquiry</SelectItem>
-            <SelectItem value="medium">Medium - Needs attention</SelectItem>
-            <SelectItem value="high">High - Urgent issue</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Description */}

@@ -7,7 +7,6 @@ import { EmbeddableForm } from './components/embeddable-form'
 function EmbeddableFormContent() {
   const searchParams = useSearchParams()
   const platform = searchParams.get('platform') || 'Unknown'
-  const software = searchParams.get('software') || 'General'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-4 md:p-6">
@@ -27,7 +26,7 @@ function EmbeddableFormContent() {
 
         {/* Form Container */}
         <div className="rounded-lg border border-border bg-card shadow-lg overflow-hidden">
-          <EmbeddableForm platform={platform} software={software} />
+          <EmbeddableForm platform={platform} />
         </div>
 
         {/* Footer */}
