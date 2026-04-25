@@ -1,33 +1,14 @@
 import Link from 'next/link'
-import { BarChart3, Ticket, Users, Code2 } from 'lucide-react'
+import { BarChart3, Ticket, Code2 } from 'lucide-react'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
+import HomeNav from '@/components/home-nav'
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-              <Ticket className="w-5 h-5 text-accent-foreground" />
-            </div>
-            <span className="font-bold text-lg text-foreground">SupportIt</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/admin/dashboard">
-              <Button variant="ghost">Admin</Button>
-            </Link>
-            <Link href="/staff/tickets">
-              <Button variant="ghost">Staff</Button>
-            </Link>
-            <Link href="/user/tickets">
-              <Button variant="ghost">User</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <HomeNav />
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 py-16 md:py-24">
