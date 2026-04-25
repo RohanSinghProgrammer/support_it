@@ -13,7 +13,7 @@ export default function Home() {
             <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
               <Ticket className="w-5 h-5 text-accent-foreground" />
             </div>
-            <span className="font-bold text-lg text-foreground">TicketFlow</span>
+            <span className="font-bold text-lg text-foreground">SupportIt</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link href="/admin/dashboard">
@@ -36,7 +36,7 @@ export default function Home() {
             Professional Ticket Management SaaS
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-balance">
-            Streamline customer support with our modern, intuitive ticket management system. 
+            Streamline customer support with our modern, intuitive ticket management system.
             Built for teams that care about responsive support.
           </p>
           <div className="flex items-center justify-center gap-4">
@@ -61,7 +61,7 @@ export default function Home() {
               Admin Dashboard
             </h3>
             <p className="text-muted-foreground">
-              Comprehensive insights with real-time statistics, platform management, and staff 
+              Comprehensive insights with real-time statistics, platform management, and staff
               administration all in one place.
             </p>
           </div>
@@ -72,7 +72,7 @@ export default function Home() {
               Staff Portal
             </h3>
             <p className="text-muted-foreground">
-              Efficient ticket management interface with advanced search, status tracking, and 
+              Efficient ticket management interface with advanced search, status tracking, and
               detailed slide-over views for quick response.
             </p>
           </div>
@@ -83,7 +83,7 @@ export default function Home() {
               Embeddable Form
             </h3>
             <p className="text-muted-foreground">
-              Drop-in ticket submission form with URL parameters for platform and software context. 
+              Drop-in ticket submission form with URL parameters for platform and software context.
               Perfect for customer-facing sites.
             </p>
           </div>

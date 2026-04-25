@@ -39,7 +39,7 @@ export function Footer() {
         {/* Divider */}
         <div className="border-t border-border mt-8 pt-8">
           <p className="text-xs text-muted-foreground text-center">
-            © {new Date().getFullYear()} TicketFlow. All rights reserved.
+            © {new Date().getFullYear()} SupportIt. All rights reserved.
           </p>
         </div>
       </div>

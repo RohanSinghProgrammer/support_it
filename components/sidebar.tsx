@@ -24,12 +24,10 @@ export function Sidebar({ userRole = 'admin' }: SidebarProps) {
     { href: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
     { href: '/admin/platforms', label: 'Platforms', icon: Zap },
     { href: '/admin/staff', label: 'Staff Management', icon: Users },
-    { href: '/admin/settings', label: 'Settings', icon: Settings },
   ]
 
   const staffLinks = [
     { href: '/staff/tickets', label: 'Tickets', icon: Ticket },
-    { href: '/staff/settings', label: 'Settings', icon: Settings },
   ]
 
   const userLinks = [
@@ -48,7 +46,7 @@ export function Sidebar({ userRole = 'admin' }: SidebarProps) {
           <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
             <Ticket className="w-5 h-5 text-accent-foreground" />
           </div>
-          <span className="font-semibold text-lg text-foreground">TicketFlow</span>
+          <span className="font-semibold text-lg text-foreground">SupportIt</span>
         </Link>
       </div>
 

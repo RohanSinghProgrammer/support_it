@@ -2,7 +2,7 @@ import { AppLayout } from '@/components/app-layout'
 import { TicketsTable } from './components/tickets-table'
 
 export const metadata = {
-  title: 'Support Tickets | TicketFlow',
+  title: 'Support Tickets | SupportIt',
   description: 'View and manage support tickets',
 }
 

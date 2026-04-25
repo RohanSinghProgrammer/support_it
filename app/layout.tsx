@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'TicketFlow | Ticket Management SaaS',
+  title: 'SupportIt | Ticket Management SaaS',
   description: 'Professional ticket management and support system',
   generator: 'v0.app',
   icons: {

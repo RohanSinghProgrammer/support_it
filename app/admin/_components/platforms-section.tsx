@@ -1,18 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Trash2, Edit2 } from 'lucide-react'
+import { Plus, Trash2, Edit2, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
+import CreatePlatform from '../platforms/_components/Create'
+import EditPlatform from '../platforms/_components/Edit'
+import Link from 'next/link'
 
 interface Platform {
   id: string
@@ -39,7 +32,7 @@ const mockPlatforms: Platform[] = [
   },
 ]
 
-export function PlatformsSection() {
+export function PlatformsSection({ type }: { type: "page" | "component" }) {
   const [platforms, setPlatforms] = useState<Platform[]>(mockPlatforms)
   const [newPlatform, setNewPlatform] = useState({ name: '', description: '' })
   const [open, setOpen] = useState(false)
@@ -65,55 +58,13 @@ export function PlatformsSection() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
+        {type === "component" ? <div>
           <h2 className="text-2xl font-bold text-foreground">Platforms</h2>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-muted-foreground text-sm mt-1 hidden md:block">
             Manage software platforms for ticket submission
           </p>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Platform
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Platform</DialogTitle>
-              <DialogDescription>
-                Create a new platform for customer support
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="platform-name">Platform Name</Label>
-                <Input
-                  id="platform-name"
-                  placeholder="e.g., Acme Corp Website"
-                  value={newPlatform.name}
-                  onChange={(e) =>
-                    setNewPlatform({ ...newPlatform, name: e.target.value })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="platform-desc">Description</Label>
-                <Input
-                  id="platform-desc"
-                  placeholder="e.g., Main customer support portal"
-                  value={newPlatform.description}
-                  onChange={(e) =>
-                    setNewPlatform({ ...newPlatform, description: e.target.value })
-                  }
-                />
-              </div>
-              <Button onClick={handleAddPlatform} className="w-full">
-                Add Platform
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        </div> : <div className='w-full'></div>}
+        {type === "component" ? <Link href={"/admin/platforms"}><Button>  <Eye /> View All Platforms </Button></Link> : <CreatePlatform open={open} setOpen={setOpen} />}
       </div>
 
       {/* Platforms Grid */}
@@ -141,14 +92,7 @@ export function PlatformsSection() {
               </button>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 gap-2"
-              >
-                <Edit2 className="w-4 h-4" />
-                Edit
-              </Button>
+              <EditPlatform open={open} setOpen={setOpen} />
             </div>
           </div>
         ))}

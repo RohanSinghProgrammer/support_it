@@ -71,7 +71,7 @@ export function MobileNav({ userRole = 'admin' }: MobileNavProps) {
               <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
                 <Ticket className="w-5 h-5 text-accent-foreground" />
               </div>
-              <span className="font-semibold text-lg">TicketFlow</span>
+              <span className="font-semibold text-lg">SupportIt</span>
             </Link>
             <SheetClose asChild>
               <Button variant="ghost" size="icon">

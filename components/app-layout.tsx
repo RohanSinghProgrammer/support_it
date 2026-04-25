@@ -20,7 +20,7 @@ export function AppLayout({ children, userRole = 'admin' }: AppLayoutProps) {
         {/* Mobile Navigation Header */}
         <div className="md:hidden sticky top-0 z-40 border-b border-border bg-card">
           <div className="flex items-center justify-between h-16 px-4">
-            <div className="font-semibold">TicketFlow</div>
+            <div className="font-semibold">SupportIt</div>
             <MobileNav userRole={userRole} />
           </div>
         </div>
