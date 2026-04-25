@@ -6,31 +6,31 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { Pen } from 'lucide-react'
+
+interface Platform {
+    id: string
+    name: string
+    description: string
+    icon?: string
+}
 
 interface Props {
     open: boolean,
-    setOpen: Dispatch<SetStateAction<boolean>>
+    setOpen: Dispatch<SetStateAction<boolean>>,
+    platform: Platform | null
 }
 
-const EditPlatform = ({ open, setOpen }: Props) => {
+const EditPlatform = ({ open, setOpen, platform }: Props) => {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button variant={"outline"} className="gap-2 w-full">
-                    <Pen className="w-4 h-4" />
-                    <span>Edit Platform</span>
-                </Button>
-            </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Update Platform</DialogTitle>
                     <DialogDescription>
-                        Edit a new platform for customer support
+                        Edit the selected platform for customer support
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -39,6 +39,7 @@ const EditPlatform = ({ open, setOpen }: Props) => {
                         <Input
                             id="platform-name"
                             placeholder="e.g., Acme Corp Website"
+                            defaultValue={platform?.name ?? ''}
                         // value={newPlatform.name}
                         // onChange={(e) =>
                         //     setNewPlatform({ ...newPlatform, name: e.target.value })
@@ -50,6 +51,7 @@ const EditPlatform = ({ open, setOpen }: Props) => {
                         <Input
                             id="platform-desc"
                             placeholder="e.g., Main customer support portal"
+                            defaultValue={platform?.description ?? ''}
                         // value={newPlatform.description}
                         // onChange={(e) =>
                         //     setNewPlatform({ ...newPlatform, description: e.target.value })
@@ -59,7 +61,7 @@ const EditPlatform = ({ open, setOpen }: Props) => {
                     <Button
                         // onClick={handleAddPlatform} 
                         className="w-full">
-                        Add Platform
+                        Update Platform
                     </Button>
                 </div>
             </DialogContent>
