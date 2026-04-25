@@ -58,7 +58,7 @@ export function LogoutConfirmButton({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction className='bg-red-500 text-white' onClick={() => router.push('/')}>
+          <AlertDialogAction className='bg-red-500 hover:bg-red-600 text-white' onClick={() => router.push('/')}>
             Logout
           </AlertDialogAction>
         </AlertDialogFooter>
