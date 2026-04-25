@@ -26,11 +26,6 @@ export default function Home() {
                 Try Embed Form
               </Button>
             </Link>
-            <Link href="/admin/dashboard">
-              <Button size="lg" variant="outline" className="gap-2">
-                View Admin Demo
-              </Button>
-            </Link>
           </div>
         </div>
 

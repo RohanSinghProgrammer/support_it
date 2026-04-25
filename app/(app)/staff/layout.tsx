@@ -1,7 +1,10 @@
 import React, { ReactNode } from 'react'
 import { RoleLayout } from '@/components/role-layout'
+import { requireRole } from '@/lib/auth-helpers'
 
-const StaffLayout = ({ children }: { children: ReactNode }) => {
+const StaffLayout = async ({ children }: { children: ReactNode }) => {
+  await requireRole('staff')
+
   return <RoleLayout role="staff">{children}</RoleLayout>
 }
 

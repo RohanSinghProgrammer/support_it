@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LoaderCircle, LogOut } from 'lucide-react'
+import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -31,6 +32,7 @@ export function LogoutConfirmButton({
 }: LogoutConfirmButtonProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const trigger =
     variant === 'button' ? (
@@ -60,16 +62,23 @@ export function LogoutConfirmButton({
         </DialogHeader>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button variant="outline" disabled={isSubmitting}>
+              Cancel
+            </Button>
           </DialogClose>
           <Button
             className="bg-red-500 text-white hover:bg-red-600"
-            onClick={() => {
+            disabled={isSubmitting}
+            onClick={async () => {
+              setIsSubmitting(true)
+              await authClient.signOut()
               setOpen(false)
-              router.push('/')
+              router.push('/login')
+              router.refresh()
             }}
           >
-            Logout
+            {isSubmitting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
+            {isSubmitting ? 'Logging out...' : 'Logout'}
           </Button>
         </DialogFooter>
       </DialogContent>
